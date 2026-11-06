@@ -1,0 +1,25 @@
+diff --git a/predict.py b/predict.py
+index a4365ce..d1c2ff1 100644
+--- a/predict.py
++++ b/predict.py
+@@ -113,10 +113,17 @@ def main(args):
+         else:
+             log_rank_0(f"Loading from {checkpoint}")
+             try:
+-                state = torch.load(checkpoint)
+-            except RuntimeError:
++                state = torch.load(checkpoint, map_location="cpu")
++            except Exception as e:
+                 log_rank_0(f"Error loading {checkpoint}, skipping")
+-                continue            # some weird corrupted files
++                log_rank_0(f"Exception type: {type(e).__name__}")
++                log_rank_0(f"Exception message: {e}")
++                raise
++            #try:
++            #    state = torch.load(checkpoint)
++            #except RuntimeError:
++            #    log_rank_0(f"Error loading {checkpoint}, skipping")
++            #    continue            # some weird corrupted files
+ 
+             pretrain_args = state["args"]
+             pretrain_args.load_from = None

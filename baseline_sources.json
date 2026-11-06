@@ -1,0 +1,22 @@
+{
+  "augmented_transformer": {
+    "repository": "https://gitlab.com/mlpds_mit/askcosv2/retro/augmented_transformer.git",
+    "commit": "2d053bbaec51af5cceebc755f7041a90cb9191be",
+    "patch": null
+  },
+  "graph2smiles": {
+    "repository": "https://gitlab.com/mlpds_mit/askcosv2/retro/graph2smiles.git",
+    "commit": "bc6c34d533682c837f2c7c4583ffcd7aa9bed848",
+    "patch": "patches/graph2smiles.patch"
+  },
+  "template_relevance": {
+    "repository": "https://gitlab.com/mlpds_mit/askcosv2/retro/template_relevance.git",
+    "commit": "8268a97769c3af39fb07f214aa71c07bd24de785",
+    "patch": null
+  },
+  "retrosim": {
+    "repository": "https://github.com/connorcoley/retrosim.git",
+    "commit": "0a272f0b5de833c448f41491e81e4dc00b4d85b0",
+    "patch": "patches/retrosim.patch"
+  }
+}

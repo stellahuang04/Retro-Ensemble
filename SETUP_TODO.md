@@ -1,11 +1,13 @@
 # Author setup checklist
 
-- [ ] Verify exact experiment job arguments: LLM model IDs/providers, candidate cutoff, agent Top-k and aggregator Top-k. The source defaults do not match the intended Llama + GPT → Gemma combination; use explicit CLI arguments.
-- [ ] Supply the four baseline source trees or their exact repository URLs and commits, including local changes. A checkpoint alone is insufficient.
+- [ ] Validate a user-configured LLM/provider combination and one-target run. Users choose their own cutoff and ranking settings; paper experiment job scripts are not required.
+- [x] Record baseline repository URLs, commits and tracked runtime compatibility changes. See baseline_sources.json and patches/.
+- [ ] Verify clean upstream checkout and patch application; run real baseline inference.
 - [ ] Supply AT `model_step_500000.pt` and G2S `model.500000_49.pt` plus its matching `vocab.txt`.
 - [ ] Supply TR `model_latest.pt` from the configured grid-search run and matching `templates.jsonl`.
 - [ ] Supply RetroSim `data_processed.csv` and the exact preprocessing/split implementation.
-- [ ] Export the actual selector and four baseline conda/mamba environments. Remove credentials/private package index URLs from exports before sharing.
+- [x] Collect selector and four baseline environment exports; confirm baseline Python mappings and remove machine-specific prefixes.
+- [ ] Verify installation of the exported environments on a clean Linux system.
 - [ ] Verify assets against the job logs/results used in the paper; record file sizes, SHA-256 values and training-data provenance in a model release manifest.
 - [ ] Choose a model hosting location and provide verified download URLs; no dummy download script is included.
 - [ ] Set local resource/interpreter paths and API keys in `.env` (do not upload this file).

@@ -6,7 +6,7 @@ The main pipeline generates baseline candidates, canonicalizes them, merges thei
 
 ## Status
 
-This is an initial portable source package derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. It is not yet a fully verified paper reproduction: external baseline source code, exact model assets, and baseline environment exports must be supplied. See [SETUP_TODO.md](SETUP_TODO.md).
+This is an initial portable source package derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. It is not yet a fully verified paper reproduction: baseline source versions, compatibility patches, and environment exports are now provided; model assets and end-to-end validation are still pending. See [SETUP_TODO.md](SETUP_TODO.md).
 
 ## Installation
 
@@ -25,7 +25,7 @@ Set the required API keys in `.env`. Supported providers are `cerebras` and `nch
 
 ## Baseline code and resources
 
-Default code directories are `external/askcos_retro_mamba/augmented_transformer`, `graph2smiles`, `template_relevance`, and `retrosim`. These directories are not bundled. Alternatively set the four `*_REPO` variables in `.env` to existing absolute paths. Set `*_PYTHON` to each baseline's interpreter. The pipeline loads `.env` and passes these variables to its subprocesses.
+Default code directories are `external/askcos_retro_mamba/augmented_transformer`, `graph2smiles`, `template_relevance`, and `retrosim`. These directories are not bundled. See [baseline installation](docs/INSTALL_BASELINES.md) for pinned source checkout, compatibility patches and environment creation. Alternatively set the four `*_REPO` variables in `.env` to existing absolute paths. Set `*_PYTHON` to each baseline's interpreter. The pipeline loads `.env` and passes these variables to its subprocesses.
 
 | Baseline | Default resource path relative to its code directory | Override |
 | --- | --- | --- |
