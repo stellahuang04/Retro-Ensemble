@@ -28,7 +28,7 @@ def main():
         check(f'selector dependency {module}', importlib.util.find_spec(module) is not None)
     if not args.llm_only:
         for prefix, folder in [('AT', 'augmented_transformer'), ('G2S', 'graph2smiles'), ('TR', 'template_relevance'), ('RETROSIM', 'retrosim')]:
-            repo = Path(os.environ.get(prefix + '_REPO', str(ROOT / 'external/askcos_retro_mamba' / folder))).expanduser()
+            repo = Path(os.environ.get(prefix + '_REPO', str(ROOT / 'external/baselines' / folder))).expanduser()
             check(prefix + ' source directory', repo.is_dir())
             exe = os.environ.get(prefix + '_PYTHON', sys.executable)
             check(prefix + ' Python executable', shutil.which(exe) is not None)

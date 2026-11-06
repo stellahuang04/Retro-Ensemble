@@ -16,7 +16,7 @@ RDLogger.DisableLog("rdApp.*")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-TR_REPO = Path(os.environ.get("TR_REPO", str(BASE_DIR / "external/askcos_retro_mamba/template_relevance"))).expanduser().resolve()
+TR_REPO = Path(os.environ.get("TR_REPO", str(BASE_DIR / "external/baselines/template_relevance"))).expanduser().resolve()
 MODEL_DIR = (
     TR_REPO
     / "checkpoints/grid_search_uspto_50k/ep30_bs512_hid1024x1024_drop0.3_lr0.001"

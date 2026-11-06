@@ -25,7 +25,7 @@ Set the required API keys in `.env`. Supported providers are `cerebras` and `nch
 
 ## Baseline code and resources
 
-Default code directories are `external/askcos_retro_mamba/augmented_transformer`, `graph2smiles`, `template_relevance`, and `retrosim`. These directories are not bundled. See [baseline installation](docs/INSTALL_BASELINES.md) for pinned source checkout, compatibility patches and environment creation. Alternatively set the four `*_REPO` variables in `.env` to existing absolute paths. Set `*_PYTHON` to each baseline's interpreter. The pipeline loads `.env` and passes these variables to its subprocesses.
+Default code directories are `external/baselines/augmented_transformer`, `graph2smiles`, `template_relevance`, and `retrosim`. These directories are not bundled. See [baseline installation](docs/INSTALL_BASELINES.md) for pinned source checkout, compatibility patches and environment creation. Alternatively set the four `*_REPO` variables in `.env` to existing absolute paths. Set `*_PYTHON` to each baseline's interpreter. The pipeline loads `.env` and passes these variables to its subprocesses.
 
 | Baseline | Default resource path relative to its code directory | Override |
 | --- | --- | --- |
@@ -71,7 +71,7 @@ It should contain only the six relative model-resource paths listed above, under
 ```bash
 tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
   --keep-old-files --no-same-owner \
-  -C external/askcos_retro_mamba
+  -C external/baselines
 ```
 
 Extraction refuses to overwrite existing files. If upstream already includes one of these data files, compare it with the release copy in a separate temporary directory before replacing it. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).

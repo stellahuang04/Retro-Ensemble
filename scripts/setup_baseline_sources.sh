@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="$ROOT/external/askcos_retro_mamba"
+DEST="$ROOT/external/baselines"
 mkdir -p "$DEST"
 # Refuse to overwrite or modify existing source trees.
 if [ -e "$DEST/augmented_transformer" ]; then echo "Already exists: $DEST/augmented_transformer; use a fresh checkout or configure *_REPO in .env." >&2; exit 1; fi

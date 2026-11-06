@@ -13,10 +13,9 @@ from rdkit import Chem
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-AT_REPO = Path(os.environ.get("AT_REPO", str(BASE_DIR / "external/askcos_retro_mamba/augmented_transformer"))).expanduser().resolve()
+AT_REPO = Path(os.environ.get("AT_REPO", str(BASE_DIR / "external/baselines/augmented_transformer"))).expanduser().resolve()
 MODEL_PATH = (
-    BASE_DIR
-    / "../askcos_retro_mamba/augmented_transformer/checkpoints/uspto_50k/model_step_500000.pt"
+    AT_REPO / "checkpoints/uspto_50k/model_step_500000.pt"
 ).resolve()
 
 MODEL_PATH = Path(os.environ.get("AT_CHECKPOINT", str(MODEL_PATH))).expanduser().resolve()

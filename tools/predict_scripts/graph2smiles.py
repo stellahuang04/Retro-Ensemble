@@ -16,7 +16,7 @@ RDLogger.DisableLog("rdApp.*")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-G2S_REPO = Path(os.environ.get("G2S_REPO", str(BASE_DIR / "external/askcos_retro_mamba/graph2smiles"))).expanduser().resolve()
+G2S_REPO = Path(os.environ.get("G2S_REPO", str(BASE_DIR / "external/baselines/graph2smiles"))).expanduser().resolve()
 MODEL_DIR = (G2S_REPO / "checkpoints/uspto_50k").resolve()
 MODEL_PATH = MODEL_DIR / "model.500000_49.pt"
 PROCESSED_DATA_PATH = (G2S_REPO / "data/uspto_50k/processed").resolve()

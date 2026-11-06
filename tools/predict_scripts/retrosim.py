@@ -15,7 +15,7 @@ RDLogger.DisableLog("rdApp.*")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
-RETROSIM_REPO = Path(os.environ.get("RETROSIM_REPO", str(BASE_DIR / "external/askcos_retro_mamba/retrosim"))).expanduser().resolve()
+RETROSIM_REPO = Path(os.environ.get("RETROSIM_REPO", str(BASE_DIR / "external/baselines/retrosim"))).expanduser().resolve()
 
 DATA_FILE = (
     RETROSIM_REPO
