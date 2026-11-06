@@ -9,7 +9,8 @@
 - [x] Collect selector and four baseline environment exports; confirm baseline Python mappings and remove machine-specific prefixes.
 - [ ] Verify installation of the exported environments on a clean Linux system.
 - [ ] Verify assets against the job logs/results used in the paper; record file sizes, SHA-256 values and training-data provenance in a model release manifest.
-- [ ] Choose a model hosting location and provide verified download URLs; no dummy download script is included.
+- [x] Publish baseline-assets-v1 model archive and checksum file; record release links and GitHub-reported archive digest.
+- [ ] Independently validate archive contents and checksum file, then test model loading.
 - [ ] Set local resource/interpreter paths and API keys in `.env` (do not upload this file).
 - [ ] Run `scripts/check_setup.py`, then a one-sample end-to-end job on the original server; compare candidate pool and prompts with a saved experimental run.
 - [ ] Select code license and confirm third-party/data/model redistribution terms before making the repository public.
