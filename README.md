@@ -6,7 +6,7 @@ The main pipeline generates baseline candidates, canonicalizes them, merges thei
 
 ## Status
 
-This is an initial portable source package derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. It is not yet a fully verified paper reproduction: baseline source versions, compatibility patches, and environment exports are now provided; model assets and end-to-end validation are still pending. See [SETUP_TODO.md](SETUP_TODO.md).
+This is an initial portable source package derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. It is not yet a fully verified paper reproduction: baseline source versions, compatibility patches, and environment exports are now provided; model assets are available in the release; end-to-end validation is still pending. See [SETUP_TODO.md](SETUP_TODO.md).
 
 ## Installation
 
@@ -36,7 +36,47 @@ Default code directories are `external/askcos_retro_mamba/augmented_transformer`
 | TR templates | `data/uspto_50k/processed/templates.jsonl` | `TR_TEMPLATES` |
 | RetroSim corpus | `retrosim/data/data_processed.csv` | `RETROSIM_DATA` |
 
-RetroSim uses its training corpus and template extraction code, not a neural-network checkpoint. The paths above are the source branch's configured paths; the author must verify the exact experiment assets before release. Downloads and checksums are intentionally not fabricated.
+RetroSim uses its training corpus and template extraction code, not a neural-network checkpoint. The paths above are the source branch's configured paths; the author must verify the exact experiment assets before release. Download and verification instructions are provided below.
+
+
+## Download model assets
+
+The [baseline-assets-v1 release](https://github.com/stellahuang04/RetroEnsemble/releases/tag/baseline-assets-v1) contains `retroensemble-baselines-v1.tar.gz` (530,503,210 bytes) and `SHA256SUMS.txt`. Download both from that page. While this repository is private, sign in with an account that has repository access. Place both files in `downloads/` under this repository.
+
+GitHub reports this SHA-256 for the uploaded archive:
+
+```text
+e158429e62270fe163deec16cdfc3e02f302b82accc555c8cb053fa1c3a8e367
+```
+
+After preparing the baseline sources, run from the repository root:
+
+```bash
+(
+  set -e
+  cd downloads
+  sha256sum -c SHA256SUMS.txt
+  printf '%s  %s\n' 'e158429e62270fe163deec16cdfc3e02f302b82accc555c8cb053fa1c3a8e367' 'retroensemble-baselines-v1.tar.gz' | sha256sum -c -
+)
+```
+
+Continue only if both checks succeed. Inspect the archive listing:
+
+```bash
+tar -tzf downloads/retroensemble-baselines-v1.tar.gz
+```
+
+It should contain only the six relative model-resource paths listed above, under the four baseline directories. Extract into a fresh baseline checkout:
+
+```bash
+tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
+  --keep-old-files --no-same-owner \
+  -C external/askcos_retro_mamba
+```
+
+Extraction refuses to overwrite existing files. If upstream already includes one of these data files, compare it with the release copy in a separate temporary directory before replacing it. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).
+
+The release upload and GitHub-provided digest have been checked. Archive contents, the uploaded checksum file's contents, and model loading have not yet been independently validated here.
 
 ## Run MoA from an existing candidate pool
 
