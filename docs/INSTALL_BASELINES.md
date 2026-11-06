@@ -37,7 +37,7 @@ Run `micromamba env list` to locate the created environments. Set each variable 
 
 ## Model assets and validation
 
-Supply the six resource files at the paths in the main README, or set their overrides in `.env`. They are not included in Git, and download hosting is pending. Do not regenerate the vocabulary or templates independently of their checkpoints.
+Supply the six resource files at the paths in the main README, or set their overrides in `.env`. They are distributed in the baseline-assets-v1 Release. Follow the download, checksum and extraction instructions in the main README. Do not regenerate the vocabulary or templates independently of their checkpoints.
 
 ```bash
 micromamba run -n retroensemble_askcos_llm python scripts/check_setup.py
