@@ -13,3 +13,7 @@ data/
 *.pth
 *.ckpt
 .DS_Store
+downloads/
+*.log
+scripts/offline_moa_smoke.py
+scripts/replay_recorded_moa.py
