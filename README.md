@@ -6,18 +6,31 @@ The main pipeline generates baseline candidates, canonicalizes them, merges thei
 
 ## Status
 
-This is an initial portable source package derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. It is not yet a fully verified paper reproduction: baseline source versions, compatibility patches, and environment exports are now provided; model assets are available in the release; end-to-end validation is still pending. See [SETUP_TODO.md](SETUP_TODO.md).
+This portable source package was derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. A clean-clone installation on the author's older CentOS Linux server has verified four baseline source checkouts, installed their environments and released assets, and completed a one-target baseline inference. The offline MoA mock run and a replay of one recorded real three-model response also completed, matching the saved final Top-10 precursor SMILES. These checks do **not** validate live LLM API inference, the entire USPTO-50K experiment, or exact paper reproducibility. See [SETUP_TODO.md](SETUP_TODO.md).
 
 ## Installation
 
-Use Python 3.10 or newer. Run commands from this repository root.
+Use **Python 3.10 or newer** for the selector environment. The server's default `python` may be older (for example, Python 3.8 cannot satisfy the `transformers>=4.51` requirement). Run commands from this repository root. A Conda environment is a straightforward option:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+conda create -n retroensemble_selector python=3.10 -y
+conda activate retroensemble_selector
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 cp .env.example .env
+python scripts/check_setup.py --llm-only
 ```
+
+Alternatively, if a suitable interpreter is already installed, create a virtual environment with `python3.10 -m venv .venv` and `source .venv/bin/activate` before installing requirements. Do not run a bare `python -m venv` without checking `python --version`.
+
+**Older CentOS / glibc 2.17:** Unconstrained pip may download a newer pandas source archive and attempt compilation with an old GCC, which failed during the clean-install test. Instead, **in a freshly created Python 3.10 environment**, replace the ordinary requirements installation command above with:
+
+```bash
+python -m pip install --only-binary=:all: \
+  -r requirements.txt -c constraints-centos7.txt
+```
+
+This uses `pandas==2.2.3`, for which a compatible prebuilt wheel was available on the tested server. The constraints file is a compatibility workaround, not the exact paper dependency lockfile; installation on other platforms is not guaranteed. Verify the environment with `python -m pip check` and `python scripts/check_setup.py --llm-only`.
 
 `requirements.txt` covers the orchestration/LLM environment only. Its minimum versions are not claimed to reproduce the original experiment environment. `requirements-original.txt` preserves the incomplete dependency list from the source branch for provenance. Each baseline may require a separate environment, including its own PyTorch/OpenNMT/RDChiral dependencies. Do not install all baseline frameworks into the selector environment blindly.
 
@@ -76,7 +89,7 @@ tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
 
 Extraction refuses to overwrite existing files. If upstream already includes one of these data files, compare it with the release copy in a separate temporary directory before replacing it. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).
 
-The release upload and GitHub-provided digest have been checked. Archive contents, the uploaded checksum file's contents, and model loading have not yet been independently validated here.
+The downloaded release archive passed SHA-256 checks during the clean installation on the author's server, and the four baseline models produced candidates on one target. This checks practical asset loading but does not establish that the released weights, templates or training data are identical to the final paper experiment assets.
 
 ## Run MoA from an existing candidate pool
 
@@ -121,9 +134,13 @@ Results are written to `outputs/<batch_work_name>/batch_results.csv`; sample dir
 - `prompt.py`, `moa_prompt.py`: shared agent and aggregator prompts.
 - `tools/predict_scripts/`: four baseline adapters, not their underlying frameworks.
 
-Run `python scripts/check_setup.py` to check assets/interpreters and `python scripts/check_setup.py --llm-only` when using an existing pool. Checks do not call an LLM or load model weights. Prompt-size checks lazily load the original Qwen tokenizer on the first actual inference; set `TOKENIZER_NAME` to a local tokenizer directory for offline use.
+Run `python scripts/check_setup.py` to check assets/interpreters and `python scripts/check_setup.py --llm-only` when using an existing pool. Checks do not call an LLM or load model weights. Configure **each** `AT_PYTHON`, `G2S_PYTHON`, `TR_PYTHON` and `RETROSIM_PYTHON` in `.env`: when omitted the baseline runner falls back to the selector Python, and a setup check reporting an executable as `OK` does not prove its framework dependencies work. Prompt-size checks lazily load the original Qwen tokenizer on the first actual inference; set `TOKENIZER_NAME` to a local tokenizer directory for offline use.
 
 `--resume` retains the original behavior: any sample index already recorded in the result CSV is skipped, including errors. Inspect errors before using it. No automatic retry of previously recorded failures is promised.
+
+## Validation scope
+
+On the author's older CentOS Linux server, a new clone successfully generated baseline candidates, completed an offline MoA run using synthetic replies, and replayed a recorded Llama/GPT/Gemma sample through the MoA code. The replayed final Top-10 SMILES matched the saved result; two recorded responses required JSON syntax repair. Offline test scripts, recorded replies, original datasets and test outputs are **not** included in this repository. These results demonstrate the checked paths only; live LLM API operation, invalid-ID edge cases and full USPTO-50K reproducibility remain unverified.
 
 ## Provenance and licensing
 
