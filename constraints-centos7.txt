@@ -1,0 +1,3 @@
+# Compatibility workaround verified on an older CentOS/glibc 2.17 server with Python 3.10.
+# Keep separate from general requirements; this is not a paper environment lockfile.
+pandas==2.2.3
