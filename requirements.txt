@@ -1,5 +1,6 @@
 # Runtime dependencies for the selector, not the four external baseline environments.
-# Minimum versions are setup requirements, not a reconstruction of the paper environment.
+# Requires Python >=3.10. Minimum versions are setup requirements, not a paper lockfile.
+# On old CentOS/glibc 2.17, install with -c constraints-centos7.txt --only-binary=:all:.
 pandas>=2.0
 rdkit>=2023.9
 transformers>=4.51,<5
