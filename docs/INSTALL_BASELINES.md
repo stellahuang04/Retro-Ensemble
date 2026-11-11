@@ -16,13 +16,18 @@ The G2S patch loads checkpoints onto the CPU initially and reports loading failu
 
 ## Environments
 
-The supplied YAML files are exports from the author's Linux environments, with the machine-specific `prefix` removed. They are reference snapshots, not minimal cross-platform dependency lists. GPU driver compatibility and a fresh installation have not yet been verified. Some conda and pip packages overlap; resolve installation failures before proceeding.
+The YAML files are exports from the author's original Linux environments, with machine-specific `prefix` removed. They are reference snapshots, **not** minimal cross-platform dependency lists or exact paper environment locks. A clean installation of the four baseline environments was completed on the author's older CentOS server, but GPU compatibility and installation on other systems remain unverified. Use a separate selector environment installed as described in the main README.
+
+With Conda, create each baseline environment:
 
 ```bash
-for name in askcos_llm transformer graph2smiles template_relevance retrosim; do
-    micromamba create -n "retroensemble_${name}" -f "environments/${name}.environment.yml"
+for name in transformer graph2smiles template_relevance retrosim; do
+    conda env create -n "retroensemble_${name}" \
+      -f "environments/${name}.environment.yml" || break
 done
 ```
+
+The equivalent Micromamba command is `micromamba create -n retroensemble_transformer -f environments/transformer.environment.yml` (repeat for the other three YAML files). Do **not** recreate an existing environment: first check `conda env list` and verify its dependencies. Some Conda and pip packages overlap; resolve installation failures before proceeding.
 
 Use distinct new environment names to avoid changing existing environments. All four baseline interpreter mappings were confirmed from the author's batch runner:
 
@@ -33,7 +38,7 @@ Use distinct new environment names to avoid changing existing environments. All 
 | TR | template_relevance | TR_PYTHON |
 | RetroSim | retrosim | RETROSIM_PYTHON |
 
-Run `micromamba env list` to locate the created environments. Set each variable above to its absolute `bin/python` path. Use `retroensemble_askcos_llm` for the main pipeline. Its export contains Cerebras SDK 1.67.0; the original lightweight `requirements.txt` pins 1.59.0. These are alternative environment setups: do not install requirements.txt over the exported environment without intentionally changing versions. Real API compatibility remains to be tested.
+Run `conda env list` (or `micromamba env list`) to locate the created environments. Set **all four** `*_PYTHON` variables above in your local `.env` to each environment's absolute `bin/python` path. For example, `conda run -n retroensemble_transformer python -c 'import sys; print(sys.executable)'` prints the AT interpreter path. If these variables are omitted, baseline subprocesses default to the selector's interpreter; `scripts/check_setup.py` alone does not catch missing baseline-specific dependencies. The optional `askcos_llm.environment.yml` is a historical export, not required when the selector was installed from `requirements.txt`; its Cerebras SDK version differs from the lightweight requirements, so do not layer both installations blindly. Real API compatibility remains unverified.
 
 ## Model assets and validation
 
@@ -43,4 +48,13 @@ Supply the six resource files at the paths in the main README, or set their over
 micromamba run -n retroensemble_askcos_llm python scripts/check_setup.py
 ```
 
-Then run the README's one-target example. A setup check confirms files and dependencies, not successful model inference. Source clone/patch application against upstream and full GPU/API inference have not yet been executed in this environment.
+Run the README's one-target example with `--skip_moa` to test actual baseline predictions without contacting an LLM:
+
+```bash
+python batch_run_moa_testset.py \
+  --test_csv examples/targets.csv \
+  --batch_work_name baseline_one_target \
+  --top_k 30 --limit 1 --skip_moa
+```
+
+Verify that all four prediction CSVs are nonempty and `outputs/baseline_one_target/merged_candidates.csv` exists. Source checkout/patches and one-target baseline inference passed in the author's clean-clone test. `scripts/check_setup.py` checks file existence and interpreter paths only, not model loading, API access, or accuracy.
