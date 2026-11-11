@@ -1,18 +1,22 @@
 # Author setup checklist
 
-- [ ] Validate a user-configured LLM/provider combination and one-target run. Users choose their own cutoff and ranking settings; paper experiment job scripts are not required.
-- [x] Record baseline repository URLs, commits and tracked runtime compatibility changes. See baseline_sources.json and patches/.
-- [ ] Verify clean upstream checkout and patch application; run real baseline inference.
-- [ ] Supply AT `model_step_500000.pt` and G2S `model.500000_49.pt` plus its matching `vocab.txt`.
-- [ ] Supply TR `model_latest.pt` from the configured grid-search run and matching `templates.jsonl`.
-- [ ] Supply RetroSim `data_processed.csv` and the exact preprocessing/split implementation.
-- [x] Collect selector and four baseline environment exports; confirm baseline Python mappings and remove machine-specific prefixes.
-- [ ] Verify installation of the exported environments on a clean Linux system.
-- [ ] Verify assets against the job logs/results used in the paper; record file sizes, SHA-256 values and training-data provenance in a model release manifest.
-- [x] Publish baseline-assets-v1 model archive and checksum file; record release links and GitHub-reported archive digest.
-- [ ] Independently validate archive contents and checksum file, then test model loading.
-- [ ] Set local resource/interpreter paths and API keys in `.env` (do not upload this file).
-- [ ] Run `scripts/check_setup.py`, then a one-sample end-to-end job on the original server; compare candidate pool and prompts with a saved experimental run.
-- [ ] Select code license and confirm third-party/data/model redistribution terms before making the repository public.
+## Completed in clean-clone testing
 
-The package intentionally excludes original train/test CSVs, outputs, plausibility evaluations and downstream MoA analyses. Existing candidate pools can be used without distributing those files in Git.
+- [x] Record baseline repository URLs, pinned commits and compatibility patches in `baseline_sources.json` and `patches/`.
+- [x] Publish the `baseline-assets-v1` archive and checksum file; compare downloaded SHA-256 with the published archive digest.
+- [x] Prepare a fresh checkout of AT, G2S, TR and RetroSim, including patch application.
+- [x] Install the four exported baseline environments on the author's older CentOS Linux server (not a guarantee of cross-platform compatibility).
+- [x] Install the selector in Python 3.10; use `constraints-centos7.txt` for the pandas prebuilt-wheel workaround on the tested server.
+- [x] Configure local `*_PYTHON` paths and verify the four baseline assets; run real one-target baseline inference and produce a merged candidate pool.
+- [x] Complete an offline MoA smoke test with synthetic responses and a recorded-response replay of one real Llama/GPT/Gemma sample. The replayed Top-10 SMILES matched the saved experiment output.
+
+## Still to verify before claiming full reproduction or public-ready redistribution
+
+- [ ] Validate live user-configured LLM/provider calls (model identifiers, authentication, response formats and current API behavior).
+- [ ] Independently compare every released checkpoint, vocabulary, template file and RetroSim corpus against the paper's actual job artifacts; publish per-file hashes and provenance.
+- [ ] Reproduce and verify the complete USPTO-50K experiment, including paper-specific settings and quantitative results.
+- [ ] Test invalid-ID and other error-path cases with recorded responses; a successful recorded sample with no invalid selections does not cover these edge cases.
+- [ ] Verify clean installation on additional Linux systems / GPU configurations.
+- [ ] Select a code license and verify third-party source/data/checkpoint redistribution terms before switching repository visibility to public.
+
+Original train/test datasets, experiment outputs, historical responses, plausibility analysis and temporary offline test scripts are intentionally excluded from this release. Do not commit local `.env` secrets.
