@@ -83,11 +83,11 @@ It should contain only the six relative model-resource paths listed above, under
 
 ```bash
 tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
-  --keep-old-files --no-same-owner \
+  --skip-old-files --no-same-owner \
   -C external/baselines
 ```
 
-Extraction refuses to overwrite existing files. If upstream already includes one of these data files, compare it with the release copy in a separate temporary directory before replacing it. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).
+Extraction skips existing files rather than overwriting them. If upstream already includes one of these data files (such as the RetroSim corpus), compare its content or checksum with the release copy in a separate temporary directory; do not assume the existing file matches the released resource. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).
 
 The downloaded release archive passed SHA-256 checks during the clean installation on the author's server, and the four baseline models produced candidates on one target. This checks practical asset loading but does not establish that the released weights, templates or training data are identical to the final paper experiment assets.
 
