@@ -24,13 +24,20 @@ def main():
         if not valid:
             failures.append(label)
 
+    check('selector Python >= 3.10', sys.version_info >= (3, 10))
+    if sys.version_info < (3, 10):
+        print('Install Python 3.10+ (e.g. a separate Conda environment) before selector requirements.')
+
     for module in ('pandas', 'rdkit', 'transformers', 'json_repair', 'dotenv', 'requests', 'cerebras'):
         check(f'selector dependency {module}', importlib.util.find_spec(module) is not None)
     if not args.llm_only:
         for prefix, folder in [('AT', 'augmented_transformer'), ('G2S', 'graph2smiles'), ('TR', 'template_relevance'), ('RETROSIM', 'retrosim')]:
             repo = Path(os.environ.get(prefix + '_REPO', str(ROOT / 'external/baselines' / folder))).expanduser()
             check(prefix + ' source directory', repo.is_dir())
-            exe = os.environ.get(prefix + '_PYTHON', sys.executable)
+            python_var = prefix + '_PYTHON'
+            exe = os.environ.get(python_var, sys.executable)
+            if not os.environ.get(python_var):
+                print(f'NOTE: {python_var} not set; falling back to selector Python: {sys.executable}')
             check(prefix + ' Python executable', shutil.which(exe) is not None)
             resources = {
                 'AT': [('AT_CHECKPOINT', repo / 'checkpoints/uspto_50k/model_step_500000.pt')],
