@@ -1,68 +1,67 @@
 # RetroEnsemble
 
-LLM-based selection of retrosynthesis candidates from Augmented Transformer (AT), Graph2SMILES (G2S), Template Relevance (TR), and RetroSim (RS).
+RetroEnsemble integrates predictions from four single-step retrosynthesis models and reranks candidate precursor sets using large language models (LLMs). It supports single-LLM selection and Mixture-of-Agents (MoA) aggregation without training an additional aggregation model.
 
-The main pipeline generates baseline candidates, canonicalizes them, merges their model/rank/score information, queries proposer agents, and asks an aggregator to produce the final ranking. Single-LLM inference is also retained because it shares code with MoA. Plausibility evaluation, downstream MoA analyses, weighted voting/ensemble training, and RetroKNN inference are outside this release.
+## Retrosynthesis models and dataset
 
-## Status
+| Model | Source repository |
+| --- | --- |
+| Augmented Transformer | [ASKCOS implementation](https://gitlab.com/mlpds_mit/askcosv2/retro/augmented_transformer) |
+| Graph2SMILES | [ASKCOS implementation](https://gitlab.com/mlpds_mit/askcosv2/retro/graph2smiles) |
+| Template Relevance | [ASKCOS implementation](https://gitlab.com/mlpds_mit/askcosv2/retro/template_relevance) |
+| RetroSim | [Original implementation](https://github.com/connorcoley/retrosim) |
 
-This portable source package was derived from `stellahuang04/askcos-llm-selector`, branch `uspto50k-askcos-moa`. A clean-clone installation on the author's older CentOS Linux server has verified four baseline source checkouts, installed their environments and released assets, and completed a one-target baseline inference. The offline MoA mock run and a replay of one recorded real three-model response also completed, matching the saved final Top-10 precursor SMILES. These checks do **not** validate live LLM API inference, the entire USPTO-50K experiment, or exact paper reproducibility. See [SETUP_TODO.md](SETUP_TODO.md).
+The exact source revisions and compatibility patches are recorded in [baseline_sources.json](baseline_sources.json).
 
-## Installation
+**USPTO-50K dataset**
 
-Use **Python 3.10 or newer** for the selector environment. The server's default `python` may be older (for example, Python 3.8 cannot satisfy the `transformers>=4.51` requirement). Run commands from this repository root. A Conda environment is a straightforward option:
+- Original data: [Schneider et al., J. Chem. Inf. Model. (2016)](https://doi.org/10.1021/acs.jcim.6b00564) — [download the original supporting data (ZIP)](https://pubs.acs.org/doi/suppl/10.1021/acs.jcim.6b00564/suppl_file/ci6b00564_si_002.zip).
+- Processed benchmark: [Coley et al., ACS Cent. Sci. (2017)](https://doi.org/10.1021/acscentsci.7b00355) — [data_processed.csv](https://github.com/connorcoley/retrosim/blob/0a272f0b5de833c448f41491e81e4dc00b4d85b0/retrosim/data/data_processed.csv).
+
+The study uses 40,008 training, 5,001 validation and 5,007 test reactions. Obtain the benchmark dataset separately and prepare the input CSV as described below. The inference code and baseline model resources are provided here.
+
+## 1. Installation
+
+Use Linux with Git, Conda and Python 3.10 for the selector environment. Each retrosynthesis model has a separate environment.
 
 ```bash
+git clone https://github.com/stellahuang04/RetroEnsemble.git
+cd RetroEnsemble
 conda create -n retroensemble_selector python=3.10 -y
 conda activate retroensemble_selector
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 cp .env.example .env
+python -m pip check
 python scripts/check_setup.py --llm-only
 ```
 
-Alternatively, if a suitable interpreter is already installed, create a virtual environment with `python3.10 -m venv .venv` and `source .venv/bin/activate` before installing requirements. Do not run a bare `python -m venv` without checking `python --version`.
-
-**Older CentOS / glibc 2.17:** Unconstrained pip may download a newer pandas source archive and attempt compilation with an old GCC, which failed during the clean-install test. Instead, **in a freshly created Python 3.10 environment**, replace the ordinary requirements installation command above with:
+On older Linux distributions with glibc 2.17 (e.g., CentOS 7), replace the requirements installation command with:
 
 ```bash
 python -m pip install --only-binary=:all: \
   -r requirements.txt -c constraints-centos7.txt
 ```
 
-This uses `pandas==2.2.3`, for which a compatible prebuilt wheel was available on the tested server. The constraints file is a compatibility workaround, not the exact paper dependency lockfile; installation on other platforms is not guaranteed. Verify the environment with `python -m pip check` and `python scripts/check_setup.py --llm-only`.
+The selector uses remote LLM APIs and does not require local PyTorch, TensorFlow or Flax. Model-specific dependencies are installed separately. The first LLM run downloads the [Qwen tokenizer](https://huggingface.co/Qwen/Qwen3-235B-A22B-Instruct-2507) for prompt-size checks. Set `TOKENIZER_NAME` in `.env` to a local tokenizer directory if needed.
 
-`requirements.txt` covers the orchestration/LLM environment only. Its minimum versions are not claimed to reproduce the original experiment environment. `requirements-original.txt` preserves the incomplete dependency list from the source branch for provenance. Each baseline may require a separate environment, including its own PyTorch/OpenNMT/RDChiral dependencies. Do not install all baseline frameworks into the selector environment blindly.
+## 2. Set up the retrosynthesis models
 
-Set the required API keys in `.env`. Supported providers are `cerebras` and `nchc`; model identifiers must match the selected provider's accessible API. For NCHC, set `NCHC_API_KEY_NAME` to the variable name containing the selected key (for example `NCHC_API1`). No credentials are included.
+Skip this section and the model-asset download if you already have a compatible `merged_candidates.csv` and only want to rerank it.
 
-## Baseline code and resources
-
-Default code directories are `external/baselines/augmented_transformer`, `graph2smiles`, `template_relevance`, and `retrosim`. These directories are not bundled. See [baseline installation](docs/INSTALL_BASELINES.md) for pinned source checkout, compatibility patches and environment creation. Alternatively set the four `*_REPO` variables in `.env` to existing absolute paths. Set `*_PYTHON` to each baseline's interpreter. The pipeline loads `.env` and passes these variables to its subprocesses.
-
-| Baseline | Default resource path relative to its code directory | Override |
-| --- | --- | --- |
-| AT | `checkpoints/uspto_50k/model_step_500000.pt` | `AT_CHECKPOINT` |
-| G2S | `checkpoints/uspto_50k/model.500000_49.pt` | `G2S_CHECKPOINT` |
-| G2S vocabulary | `data/uspto_50k/processed/vocab.txt` | `G2S_DATA_DIR` (directory) |
-| TR | `checkpoints/grid_search_uspto_50k/ep30_bs512_hid1024x1024_drop0.3_lr0.001/model_latest.pt` | `TR_CHECKPOINT` |
-| TR templates | `data/uspto_50k/processed/templates.jsonl` | `TR_TEMPLATES` |
-| RetroSim corpus | `retrosim/data/data_processed.csv` | `RETROSIM_DATA` |
-
-RetroSim uses its training corpus and template extraction code, not a neural-network checkpoint. The paths above are the source branch's configured paths; the author must verify the exact experiment assets before release. Download and verification instructions are provided below.
-
-
-## Download model assets
-
-The [baseline-assets-v1 release](https://github.com/stellahuang04/RetroEnsemble/releases/tag/baseline-assets-v1) contains `retroensemble-baselines-v1.tar.gz` (530,503,210 bytes) and `SHA256SUMS.txt`. Download both from that page. While this repository is private, sign in with an account that has repository access. Place both files in `downloads/` under this repository.
-
-GitHub reports this SHA-256 for the uploaded archive:
-
-```text
-e158429e62270fe163deec16cdfc3e02f302b82accc555c8cb053fa1c3a8e367
+```bash
+bash scripts/setup_baseline_sources.sh
 ```
 
-After preparing the baseline sources, run from the repository root:
+Follow [docs/INSTALL_BASELINES.md](docs/INSTALL_BASELINES.md) to create the four environments and configure their Python interpreters in `.env`.
+
+The default source directories are under `external/baselines/`. Existing installations may be configured using the `*_REPO` variables in `.env.example`.
+
+## 3. Download model assets
+
+Download `retroensemble-baselines-v1.tar.gz` and `SHA256SUMS.txt` from the [baseline-assets-v1 release](https://github.com/stellahuang04/RetroEnsemble/releases/tag/baseline-assets-v1) into `downloads/`.
+
+Verify the archive before extracting it:
 
 ```bash
 (
@@ -73,75 +72,118 @@ After preparing the baseline sources, run from the repository root:
 )
 ```
 
-Continue only if both checks succeed. Inspect the archive listing:
+Continue only if both checks pass.
 
 ```bash
 tar -tzf downloads/retroensemble-baselines-v1.tar.gz
+tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
+  --skip-old-files --no-same-owner -C external/baselines
 ```
 
-It should contain only the six relative model-resource paths listed above, under the four baseline directories. Extract into a fresh baseline checkout:
+The archive contains six resources:
+
+| Model | Resource path relative to the model's source directory | Environment override |
+| --- | --- | --- |
+| Augmented Transformer | `checkpoints/uspto_50k/model_step_500000.pt` | `AT_CHECKPOINT` |
+| Graph2SMILES | `checkpoints/uspto_50k/model.500000_49.pt` | `G2S_CHECKPOINT` |
+| Graph2SMILES | `data/uspto_50k/processed/vocab.txt` | `G2S_DATA_DIR` (directory) |
+| Template Relevance | `checkpoints/grid_search_uspto_50k/ep30_bs512_hid1024x1024_drop0.3_lr0.001/model_latest.pt` | `TR_CHECKPOINT` |
+| Template Relevance | `data/uspto_50k/processed/templates.jsonl` | `TR_TEMPLATES` |
+| RetroSim | `retrosim/data/data_processed.csv` | `RETROSIM_DATA` |
+
+RetroSim uses a reference reaction corpus rather than a neural-network checkpoint. Extraction skips existing files; compare any pre-existing resource against the release copy before using it. If they differ, extract the released resource into a separate directory and set its override in `.env`.
+
+After configuring the four interpreters and resources:
 
 ```bash
-tar -xzf downloads/retroensemble-baselines-v1.tar.gz \
-  --skip-old-files --no-same-owner \
-  -C external/baselines
+python scripts/check_setup.py
 ```
 
-Extraction skips existing files rather than overwriting them. If upstream already includes one of these data files (such as the RetroSim corpus), compare its content or checksum with the release copy in a separate temporary directory; do not assume the existing file matches the released resource. Alternatively, extract the archive into a separate empty asset directory and configure the resource overrides in `.env` (including `G2S_DATA_DIR`).
+This checks dependencies, executable paths and resource locations; it does not load model weights.
 
-The downloaded release archive passed SHA-256 checks during the clean installation on the author's server, and the four baseline models produced candidates on one target. This checks practical asset loading but does not establish that the released weights, templates or training data are identical to the final paper experiment assets.
+## 4. Configure LLM APIs
 
-## Run MoA from an existing candidate pool
+Supported providers are [NCHC GenAI](https://rap-docs.genai.nchc.org.tw/docs/api/taiwan-ai-rap-api/) and [Cerebras](https://inference-docs.cerebras.ai/).
 
-This skips all baseline inference. Use a `merged_candidates.csv` produced by the original pipeline or this repository. It must retain the original sample IDs, model labels, ranks, scores, and candidate IDs.
+For NCHC, set the following in the local `.env` file:
 
-The following command explicitly selects Llama + GPT as agents and Gemma as aggregator. Confirm the exact API model IDs/providers and candidate cutoff against your experiment job scripts before claiming paper reproduction.
+```dotenv
+NCHC_API_KEY_NAME=NCHC_API1
+NCHC_API1=YOUR_NCHC_API_KEY
+LLM_MAX_COMPLETION_TOKENS=8192
+```
+
+For Cerebras, set `CEREBRAS_API=YOUR_CEREBRAS_API_KEY`. API keys are not distributed. Use valid credentials and model identifiers supported by your provider; availability, quota and usage charges depend on your account.
+
+## 5. Run inference
+
+### Input format
+
+The input CSV requires `id` and `rxn_smiles`. The optional `target` column contains the product SMILES; otherwise, the product is taken from the reaction SMILES after the last `>`. See [examples/targets.csv](examples/targets.csv) for a single-target input. For a full benchmark run, use a CSV prepared from the appropriate test split with these columns.
+
+### Single-LLM selection
+
+```bash
+python batch_run_testset.py \
+  --test_csv examples/targets.csv \
+  --batch_work_name single_llm \
+  --top_k 30 \
+  --candidate_cutoff 20 \
+  --llm_output_top_k 20 \
+  --llm_provider nchc \
+  --llm_model gemma-4-31B-it \
+  --reasoning
+```
+
+### Mixture-of-Agents (MoA)
 
 ```bash
 python batch_run_moa_testset.py \
-  --existing_merged_csv /absolute/path/to/merged_candidates.csv \
-  --batch_work_name moa_smoke \
+  --test_csv examples/targets.csv \
+  --batch_work_name moa \
+  --top_k 30 \
   --candidate_cutoff 20 \
   --agent_output_top_k 20 \
-  --agent_models llama-3.3-70b gpt-oss-120b \
-  --agent_providers cerebras cerebras \
-  --aggregator_model gemma-4-31b \
+  --agent_models Llama-3.3-70B-Instruct gpt-oss-120b \
+  --agent_providers nchc nchc \
+  --aggregator_model gemma-4-31B-it \
   --aggregator_provider nchc \
-  --reasoning --limit 1
+  --agent_workers 1 \
+  --reasoning
 ```
 
-The example provider/model mapping is a configuration example, not a guarantee of current account availability. Change it as needed. API calls can incur charges. Use a new `--batch_work_name` for a fresh run; remove `--limit 1` for the full input. `--start` and `--limit` select sample-index ranges in an existing pool. Replace `--reasoning` with `--no-reasoning` for the corresponding prompts.
+Each of the two agents produces a ranked list of up to 20 precursor sets. The aggregator receives both responses and the original candidate pool and returns up to 10 precursor sets.
 
-## Run the full pipeline
+Model identifiers are provider-specific. Change them if needed. Use `--no-reasoning` to request rankings without explicit rationales. `--top_k` is the baseline prediction limit, and `--candidate_cutoff` controls the number of predictions per model supplied to the LLMs. The examples use a baseline limit of 30, not a specification of all paper experiment settings.
 
-Configure baseline resources and interpreters first, then replace `--existing_merged_csv ...` in the command above with:
+### Reranking an existing candidate pool
+
+Reuse the `merged_candidates.csv` generated by the pipeline. For single-LLM selection:
 
 ```bash
---test_csv examples/targets.csv --top_k 300
+python -m tools.llm_batch_selector \
+  --merged_csv outputs/single_llm/merged_candidates.csv \
+  --work_dir outputs/single_rerank \
+  --output_csv outputs/single_rerank/batch_results.csv \
+  --candidate_cutoff 20 --output_top_k 20 \
+  --llm_provider nchc --llm_model gemma-4-31B-it \
+  --reasoning
 ```
 
-Input CSV requires `id` and `rxn_smiles`; `target` is optional. If `target` is absent, the product is extracted after the last `>` in `rxn_smiles`. The example uses an empty reactant side solely to supply a product; it is not an experimental ground truth. Dataset files from the old repository are not bundled.
+For MoA, use the MoA command above with `--existing_merged_csv /path/to/merged_candidates.csv` in place of `--test_csv examples/targets.csv --top_k 30` and choose a new `--batch_work_name`. This bypasses the four retrosynthesis models.
 
-`--top_k` is the baseline candidate limit; `--candidate_cutoff` limits each model's ranks passed to the LLM. AT and G2S retain the original beam size and n-best of 30, so requesting 300 does not generate 300 outputs from these models. Default cutoff remains 20; set the experimental value explicitly. Agents default to Top-20 and the aggregator returns Top-10 (`FINAL_OUTPUT_TOP_K` in `moa_prompt.py`).
+To generate the candidate pool without LLM inference, add `--skip_moa` to the full MoA command and use a separate work name.
 
-## Outputs and other entry points
+## 6. Outputs
 
-Results are written to `outputs/<batch_work_name>/batch_results.csv`; sample directories contain prompts, raw responses, parsed JSON and final reports. Invalid candidate IDs and duplicate selections retain their original rank slots. JSON repair changes syntax, not the intended candidate selections.
+Results are saved in `outputs/<batch_work_name>/`:
 
-- `batch_run_moa_testset.py`: full MoA pipeline or existing-pool selection.
-- `batch_run_testset.py`: Single-LLM pipeline and shared preparation helpers; retain this file even for MoA-only use.
-- `rerun_moa_aggregator.py`: rerun only the aggregator from saved agent outputs (`--help` lists inputs).
-- `prompt.py`, `moa_prompt.py`: shared agent and aggregator prompts.
-- `tools/predict_scripts/`: four baseline adapters, not their underlying frameworks.
+- `model_predictions/`: baseline predictions.
+- `canonicalized_predictions/`: standardized precursor sets.
+- `merged_candidates.csv`: combined candidates with model, rank, score and candidate ID.
+- `batch_results.csv`: ranked precursor SMILES and per-sample status.
+- `samples/`: prompts, raw responses, parsed JSON and ranking reports.
 
-Run `python scripts/check_setup.py` to check assets/interpreters and `python scripts/check_setup.py --llm-only` when using an existing pool. Checks do not call an LLM or load model weights. Configure **each** `AT_PYTHON`, `G2S_PYTHON`, `TR_PYTHON` and `RETROSIM_PYTHON` in `.env`: when omitted the baseline runner falls back to the selector Python, and a setup check reporting an executable as `OK` does not prove its framework dependencies work. Prompt-size checks lazily load the original Qwen tokenizer on the first actual inference; set `TOKENIZER_NAME` to a local tokenizer directory for offline use.
+Rank positions are preserved, including invalid candidate IDs and duplicate selections. Use a new work directory for each run. With `--resume`, previously recorded samples (including errors) are skipped; inspect the status column before resuming. Use `--start` and `--limit` for a subset of the input.
 
-`--resume` retains the original behavior: any sample index already recorded in the result CSV is skipped, including errors. Inspect errors before using it. No automatic retry of previously recorded failures is promised.
-
-## Validation scope
-
-On the author's older CentOS Linux server, a new clone successfully generated baseline candidates, completed an offline MoA run using synthetic replies, and replayed a recorded Llama/GPT/Gemma sample through the MoA code. The replayed final Top-10 SMILES matched the saved result; two recorded responses required JSON syntax repair. Offline test scripts, recorded replies, original datasets and test outputs are **not** included in this repository. These results demonstrate the checked paths only; live LLM API operation, invalid-ID edge cases and full USPTO-50K reproducibility remain unverified.
-
-## Provenance and licensing
-
-See `SOURCE.json` for the source commit and the scope of changes. Prompt content and ranking logic are retained; deployment paths, dependency declarations, tokenizer loading and documentation were adjusted. The source branch has no license file. No new license is assigned here: the author must select the repository license and confirm redistribution terms for external frameworks, data, and weights before public release. No paper DOI or citation metadata is invented.
+The repository provides inference code and baseline setup resources, not the full evaluation and analysis pipeline. Refer to [SOURCE.json](SOURCE.json) for code provenance. Third-party code, data and model resources retain their respective terms.

@@ -5,8 +5,7 @@
     "Excluded evaluation scripts, legacy single-target entry point, RetroKNN adapter and datasets",
     "Configurable baseline interpreters, source trees and model resources",
     "Lazy tokenizer loading and configurable tokenizer path",
-    "Added README, setup checklist, environment example and setup checks"
+    "Added README, environment example and setup checks"
   ],
-  "status": "Initial source package; real model/API inference not verified",
   "commit": "aaf393d0109a92e4ee121b4a1d3f7d7f618aa82a"
 }

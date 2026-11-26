@@ -28,7 +28,7 @@ def main():
     if sys.version_info < (3, 10):
         print('Install Python 3.10+ (e.g. a separate Conda environment) before selector requirements.')
 
-    for module in ('pandas', 'rdkit', 'transformers', 'json_repair', 'dotenv', 'requests', 'cerebras'):
+    for module in ('pandas', 'rdkit', 'transformers', 'jinja2', 'json_repair', 'dotenv', 'requests', 'cerebras'):
         check(f'selector dependency {module}', importlib.util.find_spec(module) is not None)
     if not args.llm_only:
         for prefix, folder in [('AT', 'augmented_transformer'), ('G2S', 'graph2smiles'), ('TR', 'template_relevance'), ('RETROSIM', 'retrosim')]:

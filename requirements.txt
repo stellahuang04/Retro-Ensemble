@@ -1,9 +1,10 @@
-# Runtime dependencies for the selector, not the four external baseline environments.
-# Requires Python >=3.10. Minimum versions are setup requirements, not a paper lockfile.
-# On old CentOS/glibc 2.17, install with -c constraints-centos7.txt --only-binary=:all:.
+# Selector / orchestration runtime (Python 3.10 recommended).
+# Install each external retrosynthesis model in its own environment.
+# On glibc 2.17, use -c constraints-centos7.txt --only-binary=:all:.
 pandas>=2.0
 rdkit>=2023.9
 transformers>=4.51,<5
+jinja2>=3.1,<4
 json-repair>=0.30,<1
 python-dotenv>=1.0,<2
 requests>=2.32,<3

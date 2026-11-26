@@ -1,60 +1,63 @@
-# Install the baseline models
-
-These instructions prepare the four baseline implementations used by the adapters. They are for running the architecture on your own inputs; paper job settings are not required.
+# Baseline installation
 
 ## Source code
 
-From the repository root, run:
+From the RetroEnsemble repository root:
 
 ```bash
 bash scripts/setup_baseline_sources.sh
 ```
 
-This clones the repositories and checks out the exact commits in `baseline_sources.json`, then applies the included compatibility patches. It refuses existing source directories. If you already have working baseline installations, configure `AT_REPO`, `G2S_REPO`, `TR_REPO`, and `RETROSIM_REPO` in `.env` instead.
+The script checks out the pinned revisions listed in [baseline_sources.json](../baseline_sources.json) and applies the supplied compatibility patches. It does not overwrite existing source directories.
 
-The G2S patch loads checkpoints onto the CPU initially and reports loading failures. The RetroSim patch replaces obsolete dictionary and pandas APIs. Benchmark scripts and training jobs are not part of this setup.
+| Model | Source repository |
+| --- | --- |
+| Augmented Transformer | [ASKCOS](https://gitlab.com/mlpds_mit/askcosv2/retro/augmented_transformer) |
+| Graph2SMILES | [ASKCOS](https://gitlab.com/mlpds_mit/askcosv2/retro/graph2smiles) |
+| Template Relevance | [ASKCOS](https://gitlab.com/mlpds_mit/askcosv2/retro/template_relevance) |
+| RetroSim | [Original implementation](https://github.com/connorcoley/retrosim) |
 
-## Environments
+The Graph2SMILES patch handles checkpoint loading. The RetroSim patch updates obsolete dictionary and pandas APIs.
 
-The YAML files are exports from the author's original Linux environments, with machine-specific `prefix` removed. They are reference snapshots, **not** minimal cross-platform dependency lists or exact paper environment locks. A clean installation of the four baseline environments was completed on the author's older CentOS server, but GPU compatibility and installation on other systems remain unverified. Use a separate selector environment installed as described in the main README.
+## Python environments
 
-With Conda, create each baseline environment:
+Use separate Conda environments for the four models. The YAML files are Linux environment exports; platform-specific packages and GPU dependencies may require adjustment. Use the selector environment from the [main README](../README.md).
 
 ```bash
 for name in transformer graph2smiles template_relevance retrosim; do
-    conda env create -n "retroensemble_${name}" \
-      -f "environments/${name}.environment.yml" || break
+  conda env create -n "retroensemble_${name}" \
+    -f "environments/${name}.environment.yml" || break
 done
 ```
 
-The equivalent Micromamba command is `micromamba create -n retroensemble_transformer -f environments/transformer.environment.yml` (repeat for the other three YAML files). Do **not** recreate an existing environment: first check `conda env list` and verify its dependencies. Some Conda and pip packages overlap; resolve installation failures before proceeding.
+Alternatively, use Micromamba with the same environment files. Do not recreate an environment that already exists without checking it first.
 
-Use distinct new environment names to avoid changing existing environments. All four baseline interpreter mappings were confirmed from the author's batch runner:
+## Configure interpreters
 
-| Adapter | Exported environment | .env variable |
+Locate the environment paths using `conda env list`. Set the following variables in your local `.env` file to their corresponding absolute Python executable paths.
+
+| Model | Conda environment | Environment variable |
 | --- | --- | --- |
-| AT | transformer | AT_PYTHON |
-| G2S | graph2smiles | G2S_PYTHON |
-| TR | template_relevance | TR_PYTHON |
-| RetroSim | retrosim | RETROSIM_PYTHON |
+| Augmented Transformer | `retroensemble_transformer` | `AT_PYTHON` |
+| Graph2SMILES | `retroensemble_graph2smiles` | `G2S_PYTHON` |
+| Template Relevance | `retroensemble_template_relevance` | `TR_PYTHON` |
+| RetroSim | `retroensemble_retrosim` | `RETROSIM_PYTHON` |
 
-Run `conda env list` (or `micromamba env list`) to locate the created environments. Set **all four** `*_PYTHON` variables above in your local `.env` to each environment's absolute `bin/python` path. For example, `conda run -n retroensemble_transformer python -c 'import sys; print(sys.executable)'` prints the AT interpreter path. If these variables are omitted, baseline subprocesses default to the selector's interpreter; `scripts/check_setup.py` alone does not catch missing baseline-specific dependencies. The optional `askcos_llm.environment.yml` is a historical export, not required when the selector was installed from `requirements.txt`; its Cerebras SDK version differs from the lightweight requirements, so do not layer both installations blindly. Real API compatibility remains unverified.
-
-## Model assets and validation
-
-Supply the six resource files at the paths in the main README, or set their overrides in `.env`. They are distributed in the baseline-assets-v1 Release. Follow the download, checksum and extraction instructions in the main README. Do not regenerate the vocabulary or templates independently of their checkpoints.
+For example:
 
 ```bash
-micromamba run -n retroensemble_askcos_llm python scripts/check_setup.py
+conda run -n retroensemble_transformer python -c 'import sys; print(sys.executable)'
 ```
 
-Run the README's one-target example with `--skip_moa` to test actual baseline predictions without contacting an LLM:
+Existing baseline installations may also be configured using `AT_REPO`, `G2S_REPO`, `TR_REPO` and `RETROSIM_REPO`. See [the environment template](../.env.example).
+
+## Model assets
+
+Follow the download and extraction instructions in the [main README](../README.md). The vocabulary and reaction templates must match the released checkpoints. After configuring all resources, activate the selector environment and run:
 
 ```bash
-python batch_run_moa_testset.py \
-  --test_csv examples/targets.csv \
-  --batch_work_name baseline_one_target \
-  --top_k 30 --limit 1 --skip_moa
+conda activate retroensemble_selector
+python scripts/check_setup.py
 ```
 
-Verify that all four prediction CSVs are nonempty and `outputs/baseline_one_target/merged_candidates.csv` exists. Source checkout/patches and one-target baseline inference passed in the author's clean-clone test. `scripts/check_setup.py` checks file existence and interpreter paths only, not model loading, API access, or accuracy.
+Proceed to the inference commands in the main README. The selector and baseline environments must remain separate. The optional historical selector environment export (`askcos_llm.environment.yml`) is an alternative to installing `requirements.txt`, not an additional installation step.
