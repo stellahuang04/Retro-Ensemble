@@ -1,6 +1,6 @@
-# RetroEnsemble
+# Retro-Ensemble
 
-RetroEnsemble integrates predictions from four single-step retrosynthesis models and reranks candidate precursor sets using large language models (LLMs). It supports single-LLM selection and Mixture-of-Agents (MoA) aggregation without training an additional aggregation model.
+Retro-Ensemble integrates predictions from four single-step retrosynthesis models and reranks candidate precursor sets using large language models (LLMs). It supports single-LLM selection and Mixture-of-Agents (MoA) aggregation without training an additional aggregation model.
 
 ## Retrosynthesis models and dataset
 
@@ -25,8 +25,8 @@ The study uses 40,008 training, 5,001 validation and 5,007 test reactions. Obtai
 Use Linux with Git, Conda and Python 3.10 for the selector environment. Each retrosynthesis model has a separate environment.
 
 ```bash
-git clone https://github.com/stellahuang04/RetroEnsemble.git
-cd RetroEnsemble
+git clone https://github.com/stellahuang04/Retro-Ensemble.git
+cd Retro-Ensemble
 conda create -n retroensemble_selector python=3.10 -y
 conda activate retroensemble_selector
 python -m pip install --upgrade pip
@@ -59,7 +59,7 @@ The default source directories are under `external/baselines/`. Existing install
 
 ## 3. Download model assets
 
-Download `retroensemble-baselines-v1.tar.gz` and `SHA256SUMS.txt` from the [baseline-assets-v1 release](https://github.com/stellahuang04/RetroEnsemble/releases/tag/baseline-assets-v1) into `downloads/` (create the directory with `mkdir -p downloads`).
+Download `retroensemble-baselines-v1.tar.gz` and `SHA256SUMS.txt` from the [baseline-assets-v1 release](https://github.com/stellahuang04/Retro-Ensemble/releases/tag/baseline-assets-v1) into `downloads/` (create the directory with `mkdir -p downloads`).
 
 Verify the archive before extracting it:
 
