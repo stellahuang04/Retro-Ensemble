@@ -136,6 +136,8 @@ python scripts/prepare_dataset.py \
 
 The [preprocessing script](scripts/prepare_dataset.py) extracts the product SMILES, removes product atom mapping, and canonicalizes the product with RDKit while preserving stereochemistry. It retains the original reaction SMILES, IDs and row order, and writes `id,rxn_smiles,target`. Invalid reactions raise an error rather than being silently dropped.
 
+**RDKit version:** The original dataset preprocessing used RDKit 2026.03.1. Canonical SMILES representations may vary across RDKit versions, even when they represent the same molecular structure. For exact reproduction of the original target SMILES, use RDKit 2026.03.1. Other compatible RDKit versions may be used for general inference.
+
 Use `--test_csv data/uspto_50k/processed/test.csv` in either inference command below to run the benchmark test set. The training and validation splits are not required to run inference with the released model resources.
 
 ### Single-LLM selection
