@@ -2,7 +2,7 @@
 
 ## Source code
 
-From the RetroEnsemble repository root:
+From the Retro-Ensemble repository root:
 
 ```bash
 bash scripts/setup_baseline_sources.sh
