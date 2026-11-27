@@ -15,10 +15,7 @@ The exact source revisions and compatibility patches are recorded in [baseline_s
 
 **USPTO-50K dataset**
 
-- Original data: [Schneider et al., J. Chem. Inf. Model. (2016)](https://doi.org/10.1021/acs.jcim.6b00564) — [download the original supporting data (ZIP)](https://pubs.acs.org/doi/suppl/10.1021/acs.jcim.6b00564/suppl_file/ci6b00564_si_002.zip).
-- Processed benchmark: [Coley et al., ACS Cent. Sci. (2017)](https://doi.org/10.1021/acscentsci.7b00355) — [data_processed.csv](https://github.com/connorcoley/retrosim/blob/0a272f0b5de833c448f41491e81e4dc00b4d85b0/retrosim/data/data_processed.csv).
-
-The study uses 40,008 training, 5,001 validation and 5,007 test reactions. Obtain the benchmark dataset separately and prepare the input CSV as described below. The inference code and baseline model resources are provided here.
+The USPTO-50K dataset is available from [OpenRetro](https://github.com/coleygroup/openretro/tree/main/data/USPTO_50k/raw). It provides `raw_train.csv` (40,008 reactions), `raw_val.csv` (5,001 reactions), and `raw_test.csv` (5,007 reactions). Download and prepare the test set as described in [Prepare the USPTO-50K test set](#prepare-the-uspto-50k-test-set). The dataset itself is not distributed in this repository.
 
 ## 1. Installation
 
@@ -119,7 +116,27 @@ For Cerebras, set `CEREBRAS_API=YOUR_CEREBRAS_API_KEY`. Keep `.env` local and ne
 
 ### Input format
 
-The input CSV requires `id` and `rxn_smiles`. The optional `target` column contains the product SMILES; otherwise, the product is taken from the reaction SMILES after the last `>`. See [examples/targets.csv](examples/targets.csv) for a single-target input. For a full benchmark run, use a CSV prepared from the appropriate test split with these columns.
+The input CSV requires `id` and `rxn_smiles`. The optional `target` column contains the product SMILES; otherwise, the product is taken from the reaction SMILES after the last `>`. See [examples/targets.csv](examples/targets.csv) for a single-target input. For benchmark inference, prepare the test set using the following instructions.
+
+### Prepare the USPTO-50K test set
+
+After installing the selector environment, download `raw_test.csv` from OpenRetro. The download command uses a fixed upstream revision to preserve the benchmark input and row order.
+
+```bash
+mkdir -p data/uspto_50k/raw
+curl -fL \
+  https://raw.githubusercontent.com/coleygroup/openretro/96fb40cd622ae4a7645e51b50479c930341afee8/data/USPTO_50k/raw/raw_test.csv \
+  -o data/uspto_50k/raw/raw_test.csv
+
+python scripts/prepare_dataset.py \
+  --input_csv data/uspto_50k/raw/raw_test.csv \
+  --output_csv data/uspto_50k/processed/test.csv \
+  --expected_rows 5007
+```
+
+The [preprocessing script](scripts/prepare_dataset.py) extracts the product SMILES, removes product atom mapping, and canonicalizes the product with RDKit while preserving stereochemistry. It retains the original reaction SMILES, IDs and row order, and writes `id,rxn_smiles,target`. Invalid reactions raise an error rather than being silently dropped.
+
+Use `--test_csv data/uspto_50k/processed/test.csv` in either inference command below to run the benchmark test set. The training and validation splits are not required to run inference with the released model resources.
 
 ### Single-LLM selection
 
